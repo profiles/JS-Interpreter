@@ -16,9 +16,10 @@
  * @param {Function=} opt_initFunc Optional initialization function.  Used to
  *     define APIs.  When called it is passed the interpreter object and the
  *     global scope object.
+ * @param options
  * @constructor
  */
-var Interpreter = function(code, opt_initFunc) {
+var Interpreter = function(code, opt_initFunc, options) {
   if (typeof code === 'string') {
     code = this.parse_(code, 'code');
   }
@@ -31,6 +32,7 @@ var Interpreter = function(code, opt_initFunc) {
   }
   this.ast = ast;
   this.initFunc_ = opt_initFunc;
+  this.stepCallback = options && options.stepCallback;
   this.paused_ = false;
   this.polyfills_ = [];
   // Unique identifier for native functions.  Used in serialization.
@@ -368,6 +370,7 @@ Interpreter.prototype.step = function() {
       return true;
     }
     try {
+      this.stepCallback && this.stepCallback.call(this, type, stack, state, node);
       var nextState = this.stepFunctions_[type](stack, state, node);
     } catch (e) {
       // Eat any step errors.  They have been thrown on the stack.
